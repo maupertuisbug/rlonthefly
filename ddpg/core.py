@@ -22,6 +22,7 @@ class Agent:
         self.rb = TensorDictReplayBuffer(storage=LazyTensorStorage(100000), batch_size=32)
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.actor = Actor(self.obs_n, self.action_n).to(self.device)
+        self.actor_target = copy.deepcopy(self.actor).to(self.device)
         self.qvalue = QFunction(self.obs_n+self.action_n).to(self.device)
         self.qvalue_target = copy.deepcopy(self.qvalue).to(self.device)
 
@@ -32,7 +33,7 @@ class Agent:
             obs, _ = self.env.reset()
             done = False
             steps = 0
-            while steps < 800 and done == False:
+            while steps < 999 and done == False:
                 steps += 1
                 action = self.env.action_space.sample()
                 next_obs, reward, done, _, _ = self.env.step(action)
@@ -59,7 +60,7 @@ class Agent:
             done = False 
             obs, _  = self.env.reset()
             ep_reward = 0
-            max_steps = 800
+            max_steps = 999
             while not done and steps < max_steps:
                 action = self.actor(torch.tensor(obs).to(self.device))
                 next_obs, reward, done, _, _ = self.env.step(action.detach().cpu().numpy())
@@ -77,7 +78,6 @@ class Agent:
             epr.append(ep_reward)
 
         for stp in range(0, steps):
-            stp+=1
             data = self.rb.sample()
             obs = data['obs'].to(self.device)
             action = data['action'].to(self.device)
@@ -86,7 +86,7 @@ class Agent:
             done = data['done'].to(self.device)
 
             ## compute targets 
-            predicted_actions = self.actor(next_obs)
+            predicted_actions = self.actor_target(next_obs)
             target_values = self.qvalue_target(torch.cat([next_obs, predicted_actions], dim=1))
 
             target_q = reward + 0.99*(1-done)*(target_values)
@@ -99,18 +99,19 @@ class Agent:
             loss_q.backward()
             self.qvalue.optimizer.step()
 
-            actor_pred = self.qvalue_target(torch.cat([obs, self.actor(obs)], dim=1))
+            actor_pred = self.qvalue(torch.cat([obs, self.actor(obs)], dim=1))
             loss_p = -torch.mean(actor_pred,dim=0)
 
             self.actor.optimizer.zero_grad()
             loss_p.backward()
-            self.qvalue.optimizer.step()
+            self.actor.optimizer.step()
 
             loss_qnet.append(loss_q.detach().cpu().numpy())
             loss_anet.append(loss_p.detach().cpu().numpy())
 
             if stp % update_freq == 0:
                 softupdate(self.qvalue_target, self.qvalue, 0.005)
+                softupdate(self.actor_target, self.actor, 0.005)
 
         return loss_anet, loss_qnet, epr
 
@@ -121,13 +122,13 @@ for training_steps in range(0, 100):
     a, b, c = agent.train(100)
     fig, ax = plt.subplots(1, 3, figsize=(30, 15))
     ax[0].plot(np.arange(len(a)), a)
-    ax[0].set_title(f"Actor Loss")
+    ax[0].set_title(f"Actor Loss "+str(training_steps))
 
     ax[1].plot(np.arange(len(b)), b)
-    ax[1].set_title(f"QValue Loss")
+    ax[1].set_title(f"QValue Loss "+str(training_steps))
 
     ax[2].plot(np.arange(len(c)), c)
-    ax[2].set_title(f"Ep Reward")
+    ax[2].set_title(f"Ep Reward "+str(training_steps))
 
     fig.savefig('ddpg.png')
 
