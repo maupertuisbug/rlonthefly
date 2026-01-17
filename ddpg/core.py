@@ -6,6 +6,7 @@ from tensordict import TensorDict
 import copy
 import numpy as np 
 import matplotlib.pyplot as plt
+from gymnasium.wrappers import RecordVideo
 
 mean_episode = []
 mean_loss = [] 
@@ -53,8 +54,9 @@ class Agent:
     def train(self, noise_type):
 
         ## interact and collect and eval 
-        eval_ep = 100
+        eval_ep = 10
         obs, _ = self.env.reset()
+        env = RecordVideo(self.env, video_folder="videos", episode_trigger=lambda e: True)
         epr = []
         loss_qnet = [] 
         loss_anet = []
@@ -62,16 +64,16 @@ class Agent:
         update_freq = 1
         for ep in range(0, eval_ep):
             done = False 
-            obs, _  = self.env.reset()
+            obs, _  = env.reset()
             ep_reward = 0
             max_steps = 999
             actions = []
             steps = 0
             self.actor.noise.reset()
             while not done and steps < max_steps:
-                action = self.actor(torch.tensor(obs).to(self.device), noise_type, steps)
+                action = self.actor(torch.tensor(obs).to(self.device), noise_type, steps+1)
                 actions.append(action.detach().cpu().numpy())
-                next_obs, reward, done, _, _ = self.env.step(action.detach().cpu().numpy())
+                next_obs, reward, done, _, _ = env.step(action.detach().cpu().numpy())
                 ep_reward = ep_reward + reward
                 td = TensorDict({
                     'obs' : torch.tensor(obs), 
@@ -132,12 +134,14 @@ import sys
 run_type = sys.argv[1]
 noise_type = sys.argv[2]
 agent = Agent(int(run_type))
-agent.collect_init_data(100)
+print("length before adding elements:", len(agent.rb))
+agent.collect_init_data(5)
+print("length after adding elements:", len(agent.rb))
 for training_steps in range(0, 1000):
     agent.train(int(noise_type))
     fig, ax = plt.subplots(1, 4, figsize=(30, 15))
     ax[0].plot(np.arange(len(mean_episode)), mean_episode)
-    ax[0].set_title(f"Episode Reward "+str(training_steps))
+    ax[0].set_title(f"Episode Reward"+str(training_steps))
 
     ax[1].plot(np.arange(len(mean_loss)), mean_loss)
     ax[1].set_title(f"Actor Loss "+str(training_steps))

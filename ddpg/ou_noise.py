@@ -16,7 +16,6 @@ class OUNoise():
         self.high       = torch.tensor(action_space.high).to('cuda') 
         self.reset()
 
-
     def reset(self):
         self.state = torch.ones(self.action_dim) * self.mu 
 
@@ -26,7 +25,7 @@ class OUNoise():
         self.state = x + dx 
         return self.state 
 
-    def get_action(self, action, t = 0):
+    def get_action(self, action, t):
         ou_state = self.evolve_state().to('cuda')
         self.sigma = self.max_sigma - (self.max_sigma - self.min_sigma) * min(1.0, t/self.decay_period)
         return torch.clamp(action + ou_state, self.low, self.high)

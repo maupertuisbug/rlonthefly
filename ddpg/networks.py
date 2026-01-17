@@ -1,5 +1,6 @@
 import torch 
 from ou_noise import OUNoise
+import gymnasium as gym
 
 
 
@@ -76,3 +77,27 @@ class QFunction(torch.nn.Module):
     def forward(self, state_n_action):
         out = self.net(state_n_action)
         return out
+
+
+
+class Test:
+    def __init__(self):
+        env = gym.make("MountainCarContinuous-v0", render_mode="rgb_array", goal_velocity=0.1)
+        action_space = env.action_space
+        self.actor = Actor(5, 2, 1, action_space).to('cuda')
+        self.qfunction = QFunction(8, 1).to('cuda')
+
+
+    def test_batch(self):
+        input_a = torch.ones(size = [5]).to('cuda')
+        input_b = torch.ones(size = [2]).to('cuda')
+        self.actor.eval()
+        input_a = input_a.unsqueeze(0)
+        value = self.actor(input_a, 1, 1)
+        print(value.shape)
+        input_c = torch.ones(size = [256, 8]).to('cuda')
+        value = self.qfunction(input_c)
+        print(value.shape)
+
+t = Test()
+t.test_batch()
