@@ -31,7 +31,7 @@ class Actor(torch.nn.Module):
                 torch.nn.ReLU(),
                 torch.nn.Linear(256, self.output_features)
             )
-        self.optimizer = torch.optim.Adam(self.net.parameters(), lr = 0.0003)
+        self.optimizer = torch.optim.Adam(self.net.parameters(), lr = 0.001)
 
     def forward(self, state, type, step):
         out = self.net(state)
@@ -40,8 +40,9 @@ class Actor(torch.nn.Module):
             out = out + error 
             out = torch.clamp(out, torch.tensor(self.action_space.low).to('cuda'), torch.tensor(self.action_space.high).to('cuda'))
         else :
-            out = self.noise.get_action(out, step).to('cuda')
-        return out
+            oustate, action, out = self.noise.get_action(out, step)
+            out = out.to('cuda')
+        return oustate, action, out
 
     def forward_pred(self, state):
         out = self.net(state)
@@ -72,7 +73,7 @@ class QFunction(torch.nn.Module):
                 torch.nn.Linear(256, 1)
             )
 
-        self.optimizer = torch.optim.Adam(self.net.parameters(), lr = 0.003)
+        self.optimizer = torch.optim.Adam(self.net.parameters(), lr = 0.001)
 
     def forward(self, state_n_action):
         out = self.net(state_n_action)
@@ -98,6 +99,3 @@ class Test:
         input_c = torch.ones(size = [256, 8]).to('cuda')
         value = self.qfunction(input_c)
         print(value.shape)
-
-t = Test()
-t.test_batch()

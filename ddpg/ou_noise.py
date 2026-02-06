@@ -4,7 +4,7 @@ import torch
 
 class OUNoise():
 
-    def __init__(self, action_space, mu=0.0, theta=0.15, max_sigma=0.3, min_sigma=0.3, decay_period=100000):
+    def __init__(self, action_space, mu=0.0, theta=0.15, max_sigma=0.05, min_sigma=0.2, decay_period=100000):
         self.mu = mu 
         self.theta = theta 
         self.sigma = max_sigma 
@@ -27,8 +27,8 @@ class OUNoise():
 
     def get_action(self, action, t):
         ou_state = self.evolve_state().to('cuda')
-        self.sigma = self.max_sigma - (self.max_sigma - self.min_sigma) * min(1.0, t/self.decay_period)
-        return torch.clamp(action + ou_state, self.low, self.high)
+        # self.sigma = self.max_sigma - (self.max_sigma - self.min_sigma) * min(1.0, t/self.decay_period)
+        return ou_state, action, torch.clamp(action + ou_state, self.low, self.high)
     
 
 
