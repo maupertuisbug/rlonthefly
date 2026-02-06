@@ -14,22 +14,22 @@ class Actor(torch.nn.Module):
 
         if type == 0:
             self.net = torch.nn.Sequential(
-                torch.nn.Linear(self.input_features, 256),
+                torch.nn.Linear(self.input_features, 512),
                 torch.nn.ReLU(),
-                torch.nn.Linear(256, 256),
+                torch.nn.Linear(512, 512),
                 torch.nn.ReLU(),
-                torch.nn.Linear(256, self.output_features)
+                torch.nn.Linear(512, self.output_features)
             )
         
         else :
             self.net = torch.nn.Sequential(
-                torch.nn.Linear(self.input_features, 256),
-                torch.nn.BatchNorm1d(256),
+                torch.nn.Linear(self.input_features, 512),
+                torch.nn.BatchNorm1d(512),
                 torch.nn.ReLU(),
-                torch.nn.Linear(256, 256),
-                torch.nn.BatchNorm1d(256),
+                torch.nn.Linear(512, 512),
+                torch.nn.BatchNorm1d(512),
                 torch.nn.ReLU(),
-                torch.nn.Linear(256, self.output_features)
+                torch.nn.Linear(512, self.output_features)
             )
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr = 0.001)
 
@@ -55,22 +55,22 @@ class QFunction(torch.nn.Module):
 
         if type == 0:
             self.net = torch.nn.Sequential(
-                torch.nn.Linear(self.input_features, 256),
+                torch.nn.Linear(self.input_features, 512),
                 torch.nn.ReLU(),
-                torch.nn.Linear(256, 256),
+                torch.nn.Linear(512, 512),
                 torch.nn.ReLU(),
-                torch.nn.Linear(256, 1)
+                torch.nn.Linear(512, 1)
             )
         
         else :
             self.net = torch.nn.Sequential(
-                torch.nn.Linear(self.input_features, 256),
-                torch.nn.BatchNorm1d(256),
+                torch.nn.Linear(self.input_features, 512),
+                torch.nn.BatchNorm1d(512),
                 torch.nn.ReLU(),
-                torch.nn.Linear(256, 256),
-                torch.nn.BatchNorm1d(256),
+                torch.nn.Linear(512, 512),
+                torch.nn.BatchNorm1d(512),
                 torch.nn.ReLU(),
-                torch.nn.Linear(256, 1)
+                torch.nn.Linear(512, 1)
             )
 
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr = 0.001)
@@ -96,6 +96,6 @@ class Test:
         input_a = input_a.unsqueeze(0)
         value = self.actor(input_a, 1, 1)
         print(value.shape)
-        input_c = torch.ones(size = [256, 8]).to('cuda')
+        input_c = torch.ones(size = [512, 8]).to('cuda')
         value = self.qfunction(input_c)
         print(value.shape)
