@@ -5,31 +5,31 @@ import gymnasium as gym
 
 
 class Actor(torch.nn.Module):
-    def __init__(self, state_size, action_size, type, action_space):
+    def __init__(self, state_size, action_size, type, sigma, action_space):
         super().__init__()
         self.input_features = state_size
         self.output_features = action_size
         self.action_space = action_space
-        self.noise = OUNoise(action_space)
+        self.noise = OUNoise(action_space, sigma)
 
         if type == 0:
             self.net = torch.nn.Sequential(
-                torch.nn.Linear(self.input_features, 512),
+                torch.nn.Linear(self.input_features, 400),
                 torch.nn.ReLU(),
-                torch.nn.Linear(512, 512),
+                torch.nn.Linear(400, 300),
                 torch.nn.ReLU(),
-                torch.nn.Linear(512, self.output_features)
+                torch.nn.Linear(300, self.output_features)
             )
         
         else :
             self.net = torch.nn.Sequential(
-                torch.nn.Linear(self.input_features, 512),
-                torch.nn.BatchNorm1d(512),
+                torch.nn.Linear(self.input_features, 400),
+                torch.nn.BatchNorm1d(400),
                 torch.nn.ReLU(),
-                torch.nn.Linear(512, 512),
-                torch.nn.BatchNorm1d(512),
+                torch.nn.Linear(400, 300),
+                torch.nn.BatchNorm1d(300),
                 torch.nn.ReLU(),
-                torch.nn.Linear(512, self.output_features)
+                torch.nn.Linear(300, self.output_features)
             )
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr = 0.001)
 
@@ -46,6 +46,7 @@ class Actor(torch.nn.Module):
 
     def forward_pred(self, state):
         out = self.net(state)
+        out = torch.clamp(out, torch.tensor(self.action_space.low).to('cuda'), torch.tensor(self.action_space.high).to('cuda'))
         return out
 
 class QFunction(torch.nn.Module):
@@ -55,22 +56,22 @@ class QFunction(torch.nn.Module):
 
         if type == 0:
             self.net = torch.nn.Sequential(
-                torch.nn.Linear(self.input_features, 512),
+                torch.nn.Linear(self.input_features, 400),
                 torch.nn.ReLU(),
-                torch.nn.Linear(512, 512),
+                torch.nn.Linear(400, 300),
                 torch.nn.ReLU(),
-                torch.nn.Linear(512, 1)
+                torch.nn.Linear(300, 1)
             )
         
         else :
             self.net = torch.nn.Sequential(
-                torch.nn.Linear(self.input_features, 512),
-                torch.nn.BatchNorm1d(512),
+                torch.nn.Linear(self.input_features, 400),
+                torch.nn.BatchNorm1d(400),
                 torch.nn.ReLU(),
-                torch.nn.Linear(512, 512),
-                torch.nn.BatchNorm1d(512),
+                torch.nn.Linear(400, 300),
+                torch.nn.BatchNorm1d(300),
                 torch.nn.ReLU(),
-                torch.nn.Linear(512, 1)
+                torch.nn.Linear(300, 1)
             )
 
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr = 0.001)

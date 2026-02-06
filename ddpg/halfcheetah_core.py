@@ -21,13 +21,13 @@ def softupdate(target, source, tau):
         )
 
 class Agent:
-    def __init__(self, run_type):
+    def __init__(self, run_type, sigma):
         self.env =  gym.make('HalfCheetah-v5', render_mode="rgb_array")
         self.action_n = self.env.action_space.shape[0]
         self.obs_n = self.env.observation_space.shape[0]
         self.rb = TensorDictReplayBuffer(storage=LazyTensorStorage(300000), batch_size=256)
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.actor = Actor(self.obs_n, self.action_n, run_type, self.env.action_space).to(self.device)
+        self.actor = Actor(self.obs_n, self.action_n, run_type, sigma, self.env.action_space).to(self.device)
         self.actor_target = copy.deepcopy(self.actor).to(self.device)
         self.qvalue = QFunction(self.obs_n+self.action_n, run_type).to(self.device)
         self.qvalue_target = copy.deepcopy(self.qvalue).to(self.device)
@@ -133,6 +133,7 @@ class Agent:
                     softupdate(self.actor_target, self.actor, 0.005)
             
             epr.append(ep_reward)
+            print("Episode Reward ", ep_reward)
             actions_net.append(np.mean(actions))
 
         mean_episode.append(np.mean(epr))
@@ -140,11 +141,33 @@ class Agent:
         mean_loss_v.append(np.mean(loss_qnet))
         mean_actions.append(np.mean(actions_net))
 
+    def eval(self, episodes):
+
+        epr_reward = [] 
+        for ep in range(0, episodes):
+            done = False 
+            obs, _ = self.env.reset()
+            ep_reward = 0 
+            steps = 0
+            
+            while not done and steps < 999:
+                action = self.actor.forward_pred(torch.tensor(obs, dtype=torch.float32).to(self.device))
+                next_obs, reward, done, _, _ = self.env.step(action.detach().cpu().numpy())
+                ep_reward = ep_reward + reward
+                steps+=1 
+                
+            epr_reward.append(ep_reward)
+        
+
+        print("Mean Reward for Current Evaluation")
+        print(np.mean(epr_reward))
+
 
 import sys 
 run_type = sys.argv[1]
 noise_type = sys.argv[2]
-agent = Agent(int(run_type))
+sigma = sys.argv[3]
+agent = Agent(int(run_type), sigma)
 print("length before adding elements:", len(agent.rb))
 agent.collect_init_data(10)
 print("length after adding elements:", len(agent.rb))
@@ -163,5 +186,6 @@ for training_steps in range(0, 1000):
     ax[3].plot(np.arange(len(mean_actions)),  mean_actions)
     ax[3].set_title(f"Mean Actions "+str(training_steps))
 
-    fig.savefig('hc_ddpg_'+str(run_type)+'_'+str(noise_type)+'.png')
+    agent.eval(10)
+    fig.savefig('hc_ddpg_'+str(run_type)+'_'+str(noise_type)+ '_' + str(sigma) + '.png')
 
