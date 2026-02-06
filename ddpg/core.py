@@ -173,6 +173,10 @@ results_b = []
 results_c = [] 
 results_d = []
 for sigma in test_sigma:
+    results_a = []
+    results_b = [] 
+    results_c = [] 
+    results_d = []
     for seed in r_seed:
         agent = Agent(int(run_type), sigma)
         gym.utils.seeding.np_random(seed)
@@ -208,10 +212,10 @@ for sigma in test_sigma:
     
     fig, ax = plt.subplots(1, 4, figsize=(30, 15))
     fig.set_dpi(1200)
-    ax[0].set_title(f"Episode Reward"+str(training_epochs))
-    ax[1].set_title(f"Actor Loss "+str(training_epochs))
-    ax[2].set_title(f"QValue Loss "+str(training_epochs))
-    ax[3].set_title(f"Mean Actions "+str(training_epochs))
+    ax[0].set_title(f"Episode Reward")
+    ax[1].set_title(f"Actor Loss ")
+    ax[2].set_title(f"QValue Loss ")
+    ax[3].set_title(f"Mean Actions ")
     for series in results_a:
         ax[0].plot(np.arange(len(series)), series, linewidth=2.5)
     
