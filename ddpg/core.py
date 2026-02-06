@@ -168,7 +168,7 @@ run_type = sys.argv[1]
 noise_type = sys.argv[2]
 sigma = sys.argv[3]
 r_seed = 56
-agent = Agent(int(run_type), sigma, r_seed)
+agent = Agent(int(run_type), sigma)
 gym.utils.seeding.np_random(r_seed)
 print("length before adding elements:", len(agent.rb))
 agent.collect_init_data(10)
