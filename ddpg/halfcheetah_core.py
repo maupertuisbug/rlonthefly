@@ -207,21 +207,22 @@ for sigma in test_sigma:
         mean_actions = []
     
     fig, ax = plt.subplots(1, 4, figsize=(30, 15))
+    fig.set_dpi(1200)
     ax[0].set_title(f"Episode Reward"+str(training_epochs))
     ax[1].set_title(f"Actor Loss "+str(training_epochs))
     ax[2].set_title(f"QValue Loss "+str(training_epochs))
     ax[3].set_title(f"Mean Actions "+str(training_epochs))
     for series in results_a:
-        ax[0].plot(np.arange(len(series)), series)
+        ax[0].plot(np.arange(len(series)), series, linewidth=2.5)
     
     for series in results_b:
-        ax[1].plot(np.arange(len(series)), series)
+        ax[1].plot(np.arange(len(series)), series, linewidth=2.5)
 
     for series in results_c:
-        ax[2].plot(np.arange(len(series)), series)
+        ax[2].plot(np.arange(len(series)), series, linewidth=2.5)
     
     for series in results_d:
-        ax[3].plot(np.arange(len(series)), series)
+        ax[3].plot(np.arange(len(series)), series, linewidth=2.5)
     
     fig.savefig('exp_1_hc_ddpg_'+str(run_type)+'_'+str(noise_type)+ '_' + str(sigma) + '.png')
 
