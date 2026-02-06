@@ -173,7 +173,7 @@ gym.utils.seeding.np_random(r_seed)
 print("length before adding elements:", len(agent.rb))
 agent.collect_init_data(10)
 print("length after adding elements:", len(agent.rb))
-for training_epochs in range(0, 100):
+for training_epochs in range(0, 400):
     agent.train(int(noise_type))
     fig, ax = plt.subplots(1, 4, figsize=(30, 15))
     ax[0].plot(np.arange(len(mean_episode)), mean_episode)
