@@ -166,28 +166,62 @@ class Agent:
 import sys 
 run_type = sys.argv[1]
 noise_type = sys.argv[2]
-sigma = sys.argv[3]
-r_seed = 56
-agent = Agent(int(run_type), sigma)
-gym.utils.seeding.np_random(r_seed)
-print("length before adding elements:", len(agent.rb))
-agent.collect_init_data(10)
-print("length after adding elements:", len(agent.rb))
-for training_steps in range(0, 1000):
-    agent.train(int(noise_type))
+test_sigma = [0.01, 0.1, 0.3, 0.5, 0.8]
+r_seed = [45, 89, 11, 23, 90, 33]
+results_a = []
+results_b = [] 
+results_c = [] 
+results_d = []
+for sigma in test_sigma:
+    for seed in r_seed:
+        agent = Agent(int(run_type), sigma)
+        gym.utils.seeding.np_random(seed)
+        print("length before adding elements:", len(agent.rb))
+        agent.collect_init_data(10)
+        print("length after adding elements:", len(agent.rb))
+        for training_epochs in range(0, 1000):
+            agent.train(int(noise_type))
+            # fig, ax = plt.subplots(1, 4, figsize=(30, 15))
+            # ax[0].plot(np.arange(len(mean_episode)), mean_episode)
+            # ax[0].set_title(f"Episode Reward"+str(training_epochs))
+
+            # ax[1].plot(np.arange(len(mean_loss)), mean_loss)
+            # ax[1].set_title(f"Actor Loss "+str(training_epochs))
+
+            # ax[2].plot(np.arange(len(mean_loss_v)), mean_loss_v)
+            # ax[2].set_title(f"QValue Loss "+str(training_epochs))
+
+            # ax[3].plot(np.arange(len(mean_actions)),  mean_actions)
+            # ax[3].set_title(f"Mean Actions "+str(training_epochs))
+
+            # agent.eval(10)
+
+        results_a.append(mean_episode)
+        results_b.append(mean_loss)
+        results_c.append(mean_loss_v)
+        results_d.append(mean_actions)
+
+        mean_episode = []
+        mean_loss = []
+        mean_loss_v = []
+        mean_actions = []
+    
     fig, ax = plt.subplots(1, 4, figsize=(30, 15))
-    ax[0].plot(np.arange(len(mean_episode)), mean_episode)
-    ax[0].set_title(f"Episode Reward"+str(training_steps))
+    ax[0].set_title(f"Episode Reward"+str(training_epochs))
+    ax[1].set_title(f"Actor Loss "+str(training_epochs))
+    ax[2].set_title(f"QValue Loss "+str(training_epochs))
+    ax[3].set_title(f"Mean Actions "+str(training_epochs))
+    for series in results_a:
+        ax[0].plot(np.arange(len(series)), series)
+    
+    for series in results_b:
+        ax[1].plot(np.arange(len(series)), series)
 
-    ax[1].plot(np.arange(len(mean_loss)), mean_loss)
-    ax[1].set_title(f"Actor Loss "+str(training_steps))
-
-    ax[2].plot(np.arange(len(mean_loss_v)), mean_loss_v)
-    ax[2].set_title(f"QValue Loss "+str(training_steps))
-
-    ax[3].plot(np.arange(len(mean_actions)),  mean_actions)
-    ax[3].set_title(f"Mean Actions "+str(training_steps))
-
-    agent.eval(10)
-    fig.savefig('hc_ddpg_'+str(run_type)+'_'+str(noise_type)+ '_' + str(sigma) + '.png')
+    for series in results_c:
+        ax[2].plot(np.arange(len(series)), series)
+    
+    for series in results_d:
+        ax[3].plot(np.arange(len(series)), series)
+    
+    fig.savefig('exp_1_hc_ddpg_'+str(run_type)+'_'+str(noise_type)+ '_' + str(sigma) + '.png')
 
