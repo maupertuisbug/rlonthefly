@@ -154,6 +154,7 @@ class Agent:
                 action = self.actor.forward_pred(torch.tensor(obs, dtype=torch.float32).to(self.device))
                 next_obs, reward, done, _, _ = self.env.step(action.detach().cpu().numpy())
                 ep_reward = ep_reward + reward
+                obs = next_obs
                 steps+=1 
                 
             epr_reward.append(ep_reward)

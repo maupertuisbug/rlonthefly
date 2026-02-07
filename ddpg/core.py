@@ -154,6 +154,7 @@ class Agent:
                 action = self.actor.forward_pred(torch.tensor(obs).to(self.device))
                 next_obs, reward, done, _, _ = self.env.step(action.detach().cpu().numpy())
                 ep_reward = ep_reward + reward
+                obs = next_obs
                 steps+=1 
                 
             epr_reward.append(ep_reward)
@@ -183,7 +184,7 @@ for sigma in test_sigma:
         print("length before adding elements:", len(agent.rb))
         agent.collect_init_data(10)
         print("length after adding elements:", len(agent.rb))
-        for training_epochs in range(0, 400):
+        for training_epochs in range(0, 200):
             agent.train(int(noise_type))
             # fig, ax = plt.subplots(1, 4, figsize=(30, 15))
             # ax[0].plot(np.arange(len(mean_episode)), mean_episode)
