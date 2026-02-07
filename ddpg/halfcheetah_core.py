@@ -25,7 +25,7 @@ class Agent:
         self.env =  gym.make('HalfCheetah-v5', render_mode="rgb_array")
         self.action_n = self.env.action_space.shape[0]
         self.obs_n = self.env.observation_space.shape[0]
-        self.rb = TensorDictReplayBuffer(storage=LazyTensorStorage(300000), batch_size=256)
+        self.rb = TensorDictReplayBuffer(storage=LazyTensorStorage(5000000), batch_size=256)
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.actor = Actor(self.obs_n, self.action_n, run_type, sigma, self.env.action_space).to(self.device)
         self.actor_target = copy.deepcopy(self.actor).to(self.device)
