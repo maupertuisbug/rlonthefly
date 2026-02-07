@@ -19,7 +19,7 @@ class Actor(torch.nn.Module):
             torch.nn.Linear(300, self.output_features)
         )
 
-        self.optimizer = torch.optim.Adam(self.net.parameters(), lr = 0.001)
+        self.optimizer = torch.optim.Adam(self.net.parameters(), lr = 0.0003)
 
     def forward(self, state):
         out = self.net(state)
@@ -31,7 +31,7 @@ class Actor(torch.nn.Module):
     def forward_pred(self, state):
         out = self.net(state)
         error = torch.normal(mean = 0, std = 0.2, size = out.shape).to('cuda')
-        error = torch.clamp(error, -0.4, 0.4)
+        error = torch.clamp(error, -0.5, 0.5)
         out = out + error
         out = torch.clamp(out, torch.tensor(self.action_space.low).to('cuda'), torch.tensor(self.action_space.high).to('cuda'))
         return out

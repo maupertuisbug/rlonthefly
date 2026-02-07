@@ -13,7 +13,8 @@ os.environ["MUJOCO_GL"] = "egl"
 
 mean_episode = []
 mean_loss = [] 
-mean_loss_v = []
+mean_loss_va = []
+mean_loss_vb = []
 mean_actions = []
 
 def softupdate(target, source, tau):
@@ -68,7 +69,8 @@ class Agent:
         
         env = self.env
         epr = [] 
-        loss_qnet = [] 
+        loss_qnet_a = [] 
+        loss_qnet_b = []
         loss_anet = []
         actions_net = []
         update_freq = 1
@@ -99,7 +101,7 @@ class Agent:
                 total_steps_per_epoch+=1
 
 
-                if total_steps_per_epoch > 1000 and self.training == False:
+                if total_steps_per_epoch > 10 and self.training == False:
                     self.training = True 
 
                 
@@ -144,7 +146,8 @@ class Agent:
                         loss_p.backward()
                         self.actor.optimizer.step()
 
-                    loss_qnet.append(loss_q_a.detach().cpu().numpy())
+                    loss_qnet_a.append(loss_q_a.detach().cpu().numpy())
+                    loss_qnet_b.append(loss_q_b.detach().cpu().numpy())
                     loss_anet.append(loss_p.detach().cpu().numpy())
 
                     softupdate(self.qvalue_a_target, self.qvalue_a, 0.005)
@@ -152,12 +155,12 @@ class Agent:
                     softupdate(self.actor_target, self.actor, 0.005)
             
             epr.append(ep_reward)
-            print("Episode Reward ", ep_reward)
             actions_net.append(np.mean(actions))
 
         mean_episode.append(np.mean(epr))
         mean_loss.append(np.mean(loss_anet))
-        mean_loss_v.append(np.mean(loss_qnet))
+        mean_loss_va.append(np.mean(loss_qnet_a))
+        mean_loss_vb.append(np.mean(loss_qnet_b))
         mean_actions.append(np.mean(actions_net))
 
     def eval(self, episodes):
@@ -185,10 +188,11 @@ class Agent:
 
 import sys 
 test_sigma = [0.8]
-r_seed = [45, 89, 99]
+r_seed = [45]
 results_a = []
 results_b = [] 
 results_c = [] 
+results_e = []
 results_d = []
 for seed in r_seed:
     agent = Agent()
@@ -196,24 +200,27 @@ for seed in r_seed:
     print("length before adding elements:", len(agent.rb))
     agent.collect_init_data(10)
     print("length after adding elements:", len(agent.rb))
-    for training_epochs in range(0, 100):
+    for training_epochs in range(0, 200):
         agent.train()
     results_a.append(mean_episode)
     results_b.append(mean_loss)
-    results_c.append(mean_loss_v)
+    results_c.append(mean_loss_va)
     results_d.append(mean_actions)
+    results_e.append(mean_loss_vb)
 
     mean_episode = []
     mean_loss = []
-    mean_loss_v = []
+    mean_loss_va = []
+    mean_loss_vb = []
     mean_actions = []
 
-fig, ax = plt.subplots(1, 4, figsize=(30, 15))
+fig, ax = plt.subplots(1, 5, figsize=(30, 15))
 fig.set_dpi(1200)
 ax[0].set_title(f"Episode Reward")
 ax[1].set_title(f"Actor Loss ")
-ax[2].set_title(f"QValue Loss ")
-ax[3].set_title(f"Mean Actions ")
+ax[2].set_title(f"QValue Loss A")
+ax[3].set_title(f"QValue Loss B")
+ax[4].set_title(f"Mean Actions ")
 for series in results_a:
     ax[0].plot(np.arange(len(series)), series, linewidth=2.5)
 
@@ -225,6 +232,9 @@ for series in results_c:
 
 for series in results_d:
     ax[3].plot(np.arange(len(series)), series, linewidth=2.5)
+
+for series in results_e:
+    ax[4].plot(np.arange(len(series)), series, linewidth=2.5)
 
 fig.savefig('exp_1_hooper_td3.png')
 
